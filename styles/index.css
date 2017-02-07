@@ -1,0 +1,96 @@
+/*******************/
+/*      Utils      */
+/*******************/
+
+@keyframes fadein {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+html,
+body {
+	padding: 0;
+	margin: 0;
+	text-align: center;
+	cursor: default;
+	-webkit-user-select: none;
+	min-height: 100%;
+
+	animation: fadein;
+}
+
+body {
+	font-family: -apple-system, 'Helvetica Neue', Helvetica, sans-serif;
+}
+
+.center {
+	margin: auto;
+}
+
+.container {
+	text-align: center;
+}
+
+.header:before {
+	-webkit-app-region: drag;
+}
+
+.header {
+	min-width: 100%;
+}
+
+.header .title {
+	margin-top: 10vh;
+}
+
+tr {
+	min-height: 20px;
+	height: 20px;
+}
+
+td {
+	min-width: 20px;
+	min-height: 20px;
+	padding: 0;
+	border: 1px solid black !important;
+}
+
+#back {
+	margin-top: 10vh;
+}
+
+#mmenu {
+	position: absolute;
+	left: 12px;
+	top: 40px;
+	float: left;
+	min-width: 5vw !important;
+	margin: 0;
+}
+
+/*******************/
+/*	  Home Page    */
+/*******************/
+
+#buttons {
+	margin-top: 10vh;
+	-webkit-app-region: no-drag;
+}
+
+.button {
+	-webkit-app-region: no-drag;
+	margin-top: 5vh;
+	min-width: 40%;
+}
+
+/*******************/
+/*	Options Page   */
+/*******************/
+
+#controls {
+	width: 40%;
+}
