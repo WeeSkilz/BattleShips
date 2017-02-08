@@ -7,6 +7,7 @@ class Game {
 		this.Player = player
 		this.Challenger = challenger ? challenger : { name: 'Challenger Bot' }
 		this.GameMode = gamemode
+		this.gamestate = GameState.PLAYER_PLAY //set to PLAYER_PLAY to test (for now)
 		this.createAndPopulateGrid(this.Player)
 		this.createAndPopulateGrid(this.Challenger)
 		this.constructGrid('#pGrid')
@@ -36,19 +37,34 @@ class Game {
 		console.log(Date.now() + ' ' + player.name + ' grids populated')
 	}
 
+	mockShip(x, y) {
+
+	}
+
 	playerMove(x, y) {
-		let targetTile = this.Player.opponentGrid[x][y]
+		let player = this.Player
+		let challenger = this.Challenger
+
+		if(this.gamestate !== GameState.PLAYER_PLAY) //todo change to check if setup
+			return
+
+		let targetTile = player.opponentGrid[x][y]
 		let targetCell = $('#r' + y + ' #c' + x)
 
 		if(targetTile !== TileState.MISS && targetTile !== TileState.HIT) {
-			let opponentTile = this.Challenger.grid[x][y]
-			if(opponentTile == TileState.SHIP) {
-				this.Challenger.grid[x][y] = this.Player.opponentGrid[x][y] = TileState.HIT
-				targetCell.css({'background-color':'red'})
+			let opponentTile = challenger.grid[x][y]
+
+			if(opponentTile === TileState.SHIP) {
+				challenger.grid[x][y] = player.opponentGrid[x][y] = TileState.HIT
+
+				targetCell.addClass('hit')
+
 				console.log(Date.now() + ' hit recorded. x:' + x + ' y:' + y)
 			} else {
-				this.Player.opponentGrid[x][y] = TileState.MISS
-				targetCell.css({'background-color':'blue'})
+				player.opponentGrid[x][y] = TileState.MISS
+
+				targetCell.addClass('miss')
+
 				console.log(Date.now() + ' miss recorded. x:' + x + ' y:' + y)
 			}
 		} else {
@@ -57,7 +73,8 @@ class Game {
 		}
 
 
-		if(this.GameMode == GameMode.AI) { //player vs computer
+		if(this.GameMode === GameMode.AI) { //player vs computer
+			this.gamestate = GameState.OPPONENT_PLAY
 			this.computerMove() //make the computer move against the player
 		} else if(this.GameMode = GameMode.PVP) {
 			//update the gamestate to allow the other player to play
@@ -73,16 +90,18 @@ class Game {
 			while (!found) {
 				x = Math.floor(Math.random() * 10)
 				y = Math.floor(Math.random() * 10)
-				if(this.Challenger.opponentGrid[x][y] == TileState.EMPTY) {
+
+				if(this.Challenger.opponentGrid[x][y] === TileState.EMPTY) {
 					let aOccupied = 0
+					
 					for (var i = -1; i >= 1; i + 2) {
 						if(x + i >= 0) {
-							aOccupied += this.Challenger.opponentGrid[x + i][y] == TileState.EMPTY ? 0 : 1
+							aOccupied += this.Challenger.opponentGrid[x + i][y] === TileState.EMPTY ? 0 : 1
 						} else {
 							aOccupied++
 						}
 						if(y + i >= 0) {
-							aOccupied += this.Challenger.opponentGrid[x][y + i] == TileState.EMPTY ? 0 : 1
+							aOccupied += this.Challenger.opponentGrid[x][y + i] === TileState.EMPTY ? 0 : 1
 						} else {
 							aOccupied++
 						}
@@ -106,13 +125,9 @@ class Game {
 					break;
 			}
 
-			//TODO reset gamestate to allow player to make their move
+			this.GameState = GameState.PLAYER_PLAY
 			
 		},
 		Math.random() * 5000)
-	}
-
-	updateGrid() {
-
 	}
 }

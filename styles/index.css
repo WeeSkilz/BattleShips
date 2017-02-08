@@ -56,7 +56,22 @@ td {
 	min-width: 20px;
 	min-height: 20px;
 	padding: 0;
-	border: 1px solid black !important;
+	border: 1px solid black;
+}
+
+.ship {
+	background-color: #6C7A89;
+	border-color:  #6C7A89;
+}
+
+.hit {
+	background-color: #33C3F0;
+	border-color:  #33C3F0;
+}
+
+.miss {
+	background-color: #DADFE1;
+	border-color:  #DADFE1;
 }
 
 #back {
