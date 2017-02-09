@@ -3,9 +3,11 @@ const debug = false
 var reR = /r([0-9])$/
 var reC = /c([0-9])$/
 
+var game
+
 
 $(document).ready(() => {
-	var game = new Game({ name: 'Player' }, null, GameMode.AI); //this is defined within the jQuery scope so it cannot be altered from the commandline
+	game = new Game({ name: 'Player' }, null, GameMode.AI); //this is defined within the jQuery scope so it cannot be altered from the commandline
 
 	game.Challenger.grid[0][0] = TileState.SHIP
 
