@@ -41,9 +41,35 @@ class Game {
 		console.log(dateformat(Date.now(), "HH:MM:ss:l") + ' ' + player.name + ' grids populated')
 	}
 
+	mockShip(x, y) {
+		console.log('should be mocking at x: ' + x + ', y: ' + y)
+		for (let i = (game.ShipsToPlace); i >= 0; i--) {
+			const xmod = (game.PlaceDirection === PlaceDirection.VERTICAL ? 0 : i)
+			const ymod = (game.PlaceDirection === PlaceDirection.HORIZONTAL ? 0 : i)
+
+			let tempy, tempx
+
+			console.log('xmod: ' + xmod + ', ymod: ' + ymod)
+
+			if(y + ymod <= 9) {
+				tempy = y + ymod
+			} else {
+				tempy = y - ((y + ymod) - 9)
+			}
+
+			if(x + xmod <= 9) {
+				tempx = x + xmod
+			} else {
+				tempx = x - ((x + xmod) - 9)
+			}
+
+			console.log('mocking at x: ' + tempx + ', y: ' + tempy)
+
+			$('#oGrid #r' + tempy + ' #c' + tempx).addClass('ship')
+		}
+	}
+
 	placeShip(x, y) {
-
-
 		if(this.ShipsToPlace === 0) {
 			this.GameState = GameState.PLAYER_PLAY
 			$('#pGrid').addClass('turn')

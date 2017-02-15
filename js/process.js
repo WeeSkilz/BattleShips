@@ -1,4 +1,4 @@
-const debug = false
+const debug = true
 
 const reR = /r([0-9])$/
 const reC = /c([0-9])$/
@@ -15,14 +15,12 @@ $(document).ready(() => {
 		window.history.back()
 	})
 
-	$('.container').mouseover((event) => {
-		if(game.GameState !== GameState.SETUP) //the cursor placement detection is only for ship placement
-			return
-		
-		if(event.target !== this)
-			return
-
+	$('html').mouseover((event) => {
 		$('#oGrid .ship').removeClass('ship')
+	})
+
+	$('table').mouseover((event) => {
+		event.stopPropagation() //this stops the listener after this removing all of the ship pieces
 	})
 
 	$('td').mouseover((event) => {
@@ -46,28 +44,7 @@ $(document).ready(() => {
 			if(debug)
 				console.log('hovering over oGrid at x: ' + x + ', y: ' + y)
 
-			//$('#oGrid #r' + y + ' #c' + x).addClass('ship')
-			
-			for (let i = (game.ShipsToPlace); i >= 0; i--) {
-				var xmod = (game.PlaceDirection === PlaceDirection.VERTICAL ? 0 : i)
-				var ymod = (game.PlaceDirection === PlaceDirection.HORIZONTAL ? 0 : i)
-
-				let tempy, tempx
-
-				if(y + ymod <= 9) {
-					tempy = y + ymod
-				} else {
-					tempy = y - ((y + ymod) - 9)
-				}
-
-				if(x + xmod <= 9) {
-					tempx = x + xmod
-				} else {
-					tempx = x - ((x + xmod) - 9)
-				}
-
-				$('#oGrid #r' + tempy + ' #c' + tempx).addClass('ship')
-			}
+			game.mockShip(x, y)
 		}
 	})
 
@@ -89,6 +66,21 @@ $(document).ready(() => {
 
 		if(table.id === 'oGrid') {
 			game.placeShip(x, y)
+		}
+	})
+
+	$('td').mousedown((event) => {
+		let target = event.target
+		let x = Number(reC.exec(target.id)[1])
+		let y = Number(reR.exec(target.parentElement.id)[1])
+
+		if(debug)
+			console.log('right click at x: ' + x + ', y: ' + y)
+
+		if(event.which === 3) {
+			game.PlaceDirection = (game.PlaceDirection === PlaceDirection.VERTICAL ? PlaceDirection.HORIZONTAL : PlaceDirection.VERTICAL)
+			$('#oGrid .ship').removeClass('ship')
+			game.mockShip(x, y)
 		}
 	})
 })
