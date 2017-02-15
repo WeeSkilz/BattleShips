@@ -8,7 +8,9 @@ class Game {
 		this.Player = player
 		this.Challenger = challenger ? challenger : { name: 'Challenger Bot' }
 		this.GameMode = gamemode
-		this.gamestate = GameState.PLAYER_PLAY //set to PLAYER_PLAY to test (for now)
+		this.GameState = GameState.SETUP //set to PLAYER_PLAY to test (for now)
+		this.PlaceDirection = PlaceDirection.VERTICAL
+		this.ShipsToPlace = 3
 		this.createAndPopulateGrid(this.Player)
 		this.createAndPopulateGrid(this.Challenger)
 		this.constructGrid('#pGrid')
@@ -39,15 +41,20 @@ class Game {
 		console.log(dateformat(Date.now(), "HH:MM:ss:l") + ' ' + player.name + ' grids populated')
 	}
 
-	mockShip(x, y) {
+	placeShip(x, y) {
 
+
+		if(this.ShipsToPlace === 0) {
+			this.GameState = GameState.PLAYER_PLAY
+			$('#pGrid').addClass('turn')
+		}
 	}
 
 	playerMove(x, y) {
 		let player = this.Player
 		let challenger = this.Challenger
 
-		if(this.gamestate !== GameState.PLAYER_PLAY) {
+		if(this.GameState !== GameState.PLAYER_PLAY) {
 			console.log(dateformat(Date.now(), "HH:MM:ss:l") + ' Player attempted to move, but the GameState was not PLAYER_PLAY:1, GameState is ' + this.GameState)
 			return
 		}
@@ -79,7 +86,9 @@ class Game {
 
 
 		if(this.GameMode === GameMode.AI) { //player vs computer
-			this.gamestate = GameState.OPPONENT_PLAY
+			$('#pGrid>tbody').removeClass('turn')
+			$('#oGrid>tbody').addClass('turn')
+			this.GameState = GameState.OPPONENT_PLAY
 			this.computerMove() //make the computer move against the player
 		} else if(this.GameMode = GameMode.PVP) {
 			//update the gamestate to allow the other player to play
@@ -91,6 +100,8 @@ class Game {
 			let found = false
 			let x, y
 			let tile, localTile //localTile represents the position on the Challenger's opponentGrid
+			let oGrid = this.Challenger.opponentGrid
+			let pGrid = this.Player.grid
 
 			while (!found) {
 				x = Math.floor(Math.random() * 10)
@@ -101,19 +112,19 @@ class Game {
 
 					for (var i = -1; i >= 1; i + 2) {
 						if(x + i >= 0 && x + i <= 9) {
-							aOccupied += this.Challenger.opponentGrid[x + i][y] === TileState.EMPTY ? 0 : 1
+							aOccupied += oGrid[x + i][y] === TileState.EMPTY ? 0 : 1
 						} else {
 							aOccupied++
 						}
 						if(y + i >= 0 && y + i <= 9) {
-							aOccupied += this.Challenger.opponentGrid[x][y + i] === TileState.EMPTY ? 0 : 1
+							aOccupied += oGrid[x][y + i] === TileState.EMPTY ? 0 : 1
 						} else {
 							aOccupied++
 						}
 					}
 					if(aOccupied <= 3) {
-						tile = this.Player.grid[x][y]
-						localTile = this.Challenger.opponentGrid[x][y]
+						tile = pGrid[x][y]
+						localTile = oGrid[x][y]
 						found = true
 					}
 				}
@@ -124,21 +135,23 @@ class Game {
 
 			switch (tile) {
 				case TileState.SHIP:
-					this.Player.grid[x][y] = this.Challenger.opponentGrid[x][y] = TileState.HIT //this will dereference the cell [x, y] in the opponentGrid but it should have no effect as they hold the same value
+					pGrid[x][y] = oGrid[x][y] = TileState.HIT //this will dereference the cell [x, y] in the opponentGrid but it should have no effect as they hold the same value
 
 					targetCell.addClass('hit')
 
 					//TODO possibly increment score if I am implementing scoring
 					break;
 				case TileState.EMPTY:
-					this.Player.grid[x][y] = this.Challenger.opponentGrid[x][y] = TileState.MISS
+					pGrid[x][y] = oGrid[x][y] = TileState.MISS
 
 					targetCell.addClass('miss')
 
 					break;
 			}
 
-			this.gamestate = GameState.PLAYER_PLAY
+			this.GameState = GameState.PLAYER_PLAY
+			$('#pGrid>tbody').addClass('turn')
+			$('#oGrid>tbody').removeClass('turn')
 			console.log(dateformat(Date.now(), "HH:MM:ss:l") + ' Changed GameState to PLAYER_PLAY:' + this.GameState)
 			
 		},
