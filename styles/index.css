@@ -97,6 +97,7 @@ td {
 	float: left;
 	min-width: 5vw !important;
 	margin: 0;
+	z-index: 10000000;
 }
 
 #oGrid {

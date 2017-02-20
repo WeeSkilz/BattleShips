@@ -21,5 +21,13 @@
 				<button id="btn-exit" class="button">Exit</button>
 			</div>
 		</div>
+
+		<script type="text/javascript">
+			const { ipcRenderer } = require('electron')
+
+			$('#btn-exit').click((event) => {
+				ipcRenderer.send('close')
+			})
+		</script>
 	</body>
 </html>

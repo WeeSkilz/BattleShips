@@ -25,6 +25,7 @@
     "electron"
   ],
   "dependencies": {
+    "app-root-path": "^2.0.1",
     "dateformat": "^2.0.0",
     "electron-debug": "^1.0.0",
     "jquery": "^3.1.1"

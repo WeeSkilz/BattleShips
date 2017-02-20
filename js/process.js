@@ -1,5 +1,13 @@
 const debug = true
 
+const path = require('path')
+const appRoot = require('app-root-path')
+const GameState = require(path.join(appRoot.toString(), 'js/enums/game_state'))
+const GameMode = require(path.join(appRoot.toString(), 'js/enums/game_mode'))
+const PlaceDirection = require(path.join(appRoot.toString(), 'js/enums/place_direction'))
+const Game = require(path.join(appRoot.toString(), 'js/Game'))
+
+
 const reR = /r([0-9])$/
 const reC = /c([0-9])$/
 
@@ -9,14 +17,13 @@ let game
 $(document).ready(() => {
 	game = new Game({ name: 'Player' }, null, GameMode.AI); //this is defined within the jQuery scope so it cannot be altered from the commandline
 
-	game.Challenger.grid[0][0] = TileState.SHIP
-
 	$('#mmenu').click(function() {
 		window.history.back()
 	})
 
 	$('html').mouseover((event) => {
 		$('#oGrid .ship').removeClass('ship')
+		game.renderPlaced()
 	})
 
 	$('table').mouseover((event) => {
@@ -27,9 +34,8 @@ $(document).ready(() => {
 		if(game.GameState !== GameState.SETUP) //the cursor placement detection is only for ship placement
 			return
 
-		$('#oGrid .ship').removeClass('ship')
-
 		let target = event.target
+
 		let x = Number(reC.exec(target.id)[1])
 		let y = Number(reR.exec(target.parentElement.id)[1])
 
@@ -37,8 +43,6 @@ $(document).ready(() => {
 			console.log('hover detected at x: ' + x + ', y: ' + y)
 
 		let table = target.closest('table')
-
-		let cells = []
 
 		if(table.id == 'oGrid') {
 			if(debug)
@@ -52,8 +56,8 @@ $(document).ready(() => {
 
 	$('td').click((event) => {
 		let target = event.target
-		let x = reC.exec(target.id)[1]
-		let y = reR.exec(target.parentElement.id)[1]
+		let x = Number(reC.exec(target.id)[1])
+		let y = Number(reR.exec(target.parentElement.id)[1])
 
 		if(debug)
 			console.log('click detected at x: ' + x + ', y: ' + y)
