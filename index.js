@@ -2,7 +2,7 @@
 const electron = require('electron')
 const { ipcMain } = require('electron')
 const path = require('path')
-const WindowState = require(path.join(__dirname, '/js/enums/window_state'))
+const { WindowState } = require(path.join(__dirname, '/js/enums'))
 
 const app = electron.app
 

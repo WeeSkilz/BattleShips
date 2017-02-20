@@ -2,9 +2,7 @@ const debug = true
 
 const path = require('path')
 const appRoot = require('app-root-path')
-const GameState = require(path.join(appRoot.toString(), 'js/enums/game_state'))
-const GameMode = require(path.join(appRoot.toString(), 'js/enums/game_mode'))
-const PlaceDirection = require(path.join(appRoot.toString(), 'js/enums/place_direction'))
+const { GameState, GameMode, PlaceDirection } = require(path.join(appRoot.toString(), 'js/enums'))
 const Game = require(path.join(appRoot.toString(), 'js/Game'))
 
 
