@@ -276,8 +276,6 @@ class Game {
 				this.Challenger.grid[tempx][tempy] = TileState.SHIP
 				//$('#pGrid #r' + tempy + ' #c' + tempx).addClass('ship') //for testing
 			}
-
-
 		}
 	}
 
