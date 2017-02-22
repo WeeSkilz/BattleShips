@@ -1,6 +1,6 @@
-var electron = require('electron')
-var dateformat = require('dateformat')
-const TileState = require(path.join(appRoot.toString(), '/js/enums/tile_state'))
+const electron = require('electron')
+const dateformat = require('dateformat')
+const { TileState } = require(path.join(appRoot.toString(), '/js/enums'))
 
 class Game {
 	//TODO: Need to think of a good way to allow players to place ships using the keyboard.
@@ -18,7 +18,7 @@ class Game {
 		this.GameMode = gamemode //another feature for multiplayer
 		this.GameState = GameState.SETUP //set to PLAYER_PLAY to test (for now)
 		this.PlaceDirection = PlaceDirection.VERTICAL //the default place direction is vertical
-		this.ShipsToPlace = 3 //3 ships will be placed (4 units, 3 units, 2 units)
+		this.ShipsToPlace = 4 //4 ships will be placed (5 units, 4 units, 3 units, 2 units)
 		this.createAndPopulateGrid(this.Player)
 		this.createAndPopulateGrid(this.Challenger)
 		this.constructGrid('#pGrid')
@@ -66,8 +66,8 @@ class Game {
 	renderPlaced() {
 		for (var i = 0; i < 10; i++) {
 			for (var j = 0; j < 10; j++) {
-				if(this.Player.grid[j][i] == TileState.SHIP)
-					$('#oGrid #r' + i + ' #c' + j).addClass('ship')
+				if(this.Player.grid[i][j] == TileState.SHIP)
+					$('#oGrid #r' + j + ' #c' + i).addClass('ship')
 			}
 		}
 	}
@@ -80,6 +80,7 @@ class Game {
 	*/
 	mockShip(x, y) {
 		$('#oGrid .ship').removeClass('ship')
+		this.renderPlaced()
 
 		console.log('should be mocking at x: ' + x + ', y: ' + y)
 		for (let i = (game.ShipsToPlace); i >= 0; i--) {
@@ -106,7 +107,6 @@ class Game {
 
 			$('#oGrid #r' + tempy + ' #c' + tempx).addClass('ship')
 		}
-		this.renderPlaced()
 	}
 
 	/**
@@ -119,7 +119,7 @@ class Game {
 		if(this.ShipsToPlace === 0)
 			return
 
-		for (let i = (game.ShipsToPlace); i >= 0; i--) {
+		for (let i = game.ShipsToPlace; i >= 0; i--) {
 			const xmod = (game.PlaceDirection === PlaceDirection.VERTICAL ? 0 : i)
 			const ymod = (game.PlaceDirection === PlaceDirection.HORIZONTAL ? 0 : i)
 
@@ -139,15 +139,16 @@ class Game {
 				tempx = x - ((x + xmod) - 9)
 			}
 
-			console.log('mocking at x: ' + tempx + ', y: ' + tempy)
+			console.log('placing at x: ' + tempx + ', y: ' + tempy)
 
 			$('#oGrid #r' + tempy + ' #c' + tempx).addClass('ship')
 			this.Player.grid[tempx][tempy] = TileState.SHIP
 		}
 
 		if(this.ShipsToPlace === 1) {
+			this.placeComputerShips()
 			this.GameState = GameState.PLAYER_PLAY
-			$('#pGrid').addClass('turn')
+			$('#pGrid>tbody').addClass('turn')
 		}
 
 		this.ShipsToPlace--
@@ -200,7 +201,83 @@ class Game {
 			this.GameState = GameState.OPPONENT_PLAY
 			this.computerMove() //make the computer move against the player
 		} else if(this.GameMode = GameMode.PVP) {
-			//update the gamestate to allow the other player to play
+			//update the gamestate to allow the other player to play (multiplayer)
+		}
+	}
+
+	/**
+	* Places the computer's ships on its grid.
+	* @func
+	*/
+	placeComputerShips() {
+		let x,y
+		let direction
+
+		for (let i = 5; i > 1; i--) { //if we place the biggest ships first then we will have a higher chance of picking empty squares with the small ships maybe?
+			let found = false //assume true unless one tile changes it, guarantees that it will be false if not rather than true if not
+
+			while(!found) {
+				let isClear = true
+				x = Math.floor(Math.random() * 10)
+				y = Math.floor(Math.random() * 10)
+
+				if(Math.random() >= 0.5) {
+					direction = PlaceDirection.VERTICAL
+				} else {
+					direction = PlaceDirection.HORIZONTAL
+				}
+
+				for(let j = 0; j < Number(i); j++) {
+					const xmod = (direction === PlaceDirection.VERTICAL ? 0 : j)
+					const ymod = (direction === PlaceDirection.HORIZONTAL ? 0 : j)
+
+					let tempy, tempx
+
+					if(y + ymod <= 9) {
+						tempy = y + ymod
+					} else {
+						tempy = y - ((y + ymod) - 9)
+					}
+
+					if(x + xmod <= 9) {
+						tempx = x + xmod
+					} else {
+						tempx = x - ((x + xmod) - 9)
+					}
+
+					if(this.Challenger.grid[tempx][tempy] === TileState.SHIP){
+						isClear = false
+					}
+					
+				}
+				if(isClear) {
+					found = true
+				}
+			}
+
+			for(let k = 0; k < Number(i); k++) {
+				const xmod = (direction === PlaceDirection.VERTICAL ? 0 : k)
+				const ymod = (direction === PlaceDirection.HORIZONTAL ? 0 : k)
+
+				let tempy, tempx
+
+				if(y + ymod <= 9) {
+					tempy = y + ymod
+				} else {
+					tempy = y - ((y + ymod) - 9)
+				}
+
+				if(x + xmod <= 9) {
+					tempx = x + xmod
+				} else {
+					tempx = x - ((x + xmod) - 9)
+				}
+
+				this.Challenger.grid[tempx][tempy] = TileState.SHIP
+				//$('#pGrid #r' + tempy + ' #c' + tempx).addClass('ship') //for testing
+			}
+
+
 		}
 	}
 
@@ -210,7 +287,7 @@ class Game {
 	*/
 	computerMove() {
 		setTimeout(() => {
-			let found = false
+			let found = false //whether the algorithm has found a space to play in
 			let x, y
 			let tile, localTile //localTile represents the position on the Challenger's opponentGrid
 			let challenger = this.Challenger
@@ -220,24 +297,25 @@ class Game {
 				x = Math.floor(Math.random() * 10)
 				y = Math.floor(Math.random() * 10)
 
-				if(this.Challenger.opponentGrid[x][y] === TileState.EMPTY) {
+				if(challenger.opponentGrid[x][y] === TileState.EMPTY) {
 					let aOccupied = 0
 
+					//this way to check for the edge cases occasionally doesn't work and I will need to look into it
 					for (var i = -1; i >= 1; i + 2) {
 						if(x + i >= 0 && x + i <= 9) {
-							aOccupied += oGrid[x + i][y] === TileState.EMPTY ? 0 : 1
+							aOccupied += challenger.opponentGrid[x + i][y] === TileState.EMPTY ? 0 : 1
 						} else {
 							aOccupied++
 						}
 						if(y + i >= 0 && y + i <= 9) {
-							aOccupied += oGrid[x][y + i] === TileState.EMPTY ? 0 : 1
+							aOccupied += challenger.opponentGrid[x][y + i] === TileState.EMPTY ? 0 : 1
 						} else {
 							aOccupied++
 						}
 					}
 					if(aOccupied <= 3) {
-						tile = pGrid[x][y]
-						localTile = oGrid[x][y]
+						tile = player.grid[x][y]
+						localTile = challenger.opponentGrid[x][y]
 						found = true
 					}
 				}
@@ -252,7 +330,6 @@ class Game {
 
 					targetCell.addClass('hit')
 
-					//TODO possibly increment score if I am implementing scoring
 					break;
 				case TileState.EMPTY:
 					player.grid[x][y] = challenger.opponentGrid[x][y] = TileState.MISS
@@ -263,8 +340,10 @@ class Game {
 			}
 
 			this.GameState = GameState.PLAYER_PLAY
+
 			$('#pGrid>tbody').addClass('turn')
 			$('#oGrid>tbody').removeClass('turn')
+
 			console.log(dateformat(Date.now(), "HH:MM:ss:l") + ' Changed GameState to PLAYER_PLAY:' + this.GameState)
 			
 		},
