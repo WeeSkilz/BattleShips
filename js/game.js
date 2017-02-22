@@ -284,7 +284,7 @@ class Game {
 	* @func
 	*/
 	computerMove() {
-		setTimeout(() => {
+		//setTimeout(() => {
 			let found = false //whether the algorithm has found a space to play in
 			let x, y
 			let tile, localTile //localTile represents the position on the Challenger's opponentGrid
@@ -292,26 +292,30 @@ class Game {
 			let player = this.Player
 
 			while (!found) {
+				let aOccupied = 0
+
 				x = Math.floor(Math.random() * 10)
 				y = Math.floor(Math.random() * 10)
 
 				if(challenger.opponentGrid[x][y] === TileState.EMPTY) {
-					let aOccupied = 0
-
 					//this way to check for the edge cases occasionally doesn't work and I will need to look into it
-					for (var i = -1; i >= 1; i + 2) {
+					for (var i = -1; i <= 1; i += 2) { 
 						if(x + i >= 0 && x + i <= 9) {
 							aOccupied += challenger.opponentGrid[x + i][y] === TileState.EMPTY ? 0 : 1
+							console.log('x tile: ' + challenger.opponentGrid[x + i][y])
 						} else {
 							aOccupied++
 						}
 						if(y + i >= 0 && y + i <= 9) {
 							aOccupied += challenger.opponentGrid[x][y + i] === TileState.EMPTY ? 0 : 1
+							console.log('y tile: ' + challenger.opponentGrid[x][y + i])
 						} else {
 							aOccupied++
 						}
 					}
-					if(aOccupied <= 3) {
+
+					console.log('Occupied: ' + aOccupied)
+					if(aOccupied !== 4) {
 						tile = player.grid[x][y]
 						localTile = challenger.opponentGrid[x][y]
 						found = true
@@ -344,8 +348,8 @@ class Game {
 
 			console.log(dateformat(Date.now(), "HH:MM:ss:l") + ' Changed GameState to PLAYER_PLAY:' + this.GameState)
 			
-		},
-		Math.random() * 5000)
+		//},
+		//Math.random() * 5000)
 	}
 }
 
