@@ -23,6 +23,22 @@ class Game {
 		this.createAndPopulateGrid(this.Challenger)
 		this.constructGrid('#pGrid')
 		this.constructGrid('#oGrid')
+		$('#oGrid>tbody').addClass('place')
+		let shipTiles = this.recurseShipNumber(this.ShipsToPlace + 1)
+		this.Player.shipsToHit = shipTiles
+		this.Challenger.shipsToHit = shipTiles
+	}
+
+	/**
+	* Used to calculate the total number of ships to be hit
+	* @func
+	* @param {number} number - Number at this stage in recusion
+	*/
+	recurseShipNumber(number) {
+		if(number > 1) {
+			return number + this.recurseShipNumber(number - 1)
+		}
+		return 0
 	}
 
 	/**
@@ -148,6 +164,7 @@ class Game {
 		if(this.ShipsToPlace === 1) {
 			this.placeComputerShips()
 			this.GameState = GameState.PLAYER_PLAY
+			$('#oGrid>tbody').removeClass('place')
 			$('#pGrid>tbody').addClass('turn')
 		}
 
@@ -182,6 +199,7 @@ class Game {
 				targetCell.addClass('hit')
 
 				console.log(dateformat(Date.now(), "HH:MM:ss:l") + ' hit recorded. x:' + x + ' y:' + y)
+				player.shipsToHit -= 1
 			} else {
 				player.opponentGrid[x][y] = TileState.MISS
 
@@ -194,7 +212,15 @@ class Game {
 			return
 		}
 
-
+		if(player.shipsToHit === 0) {
+			$('table')
+				.fadeOut(1000)
+				.promise()
+				.done(() => {
+					$('#outcomemessage').text('You win!').fadeIn(600)
+				})
+			return
+		}
 		if(this.GameMode === GameMode.AI) { //player vs computer
 			$('#pGrid>tbody').removeClass('turn')
 			$('#oGrid>tbody').addClass('turn')
@@ -285,13 +311,14 @@ class Game {
 	*/
 	computerMove() {
 		//setTimeout(() => {
-			let found = false //whether the algorithm has found a space to play in
+			let found, trapped = false //whether the algorithm has found a space to play in
 			let x, y
 			let tile, localTile //localTile represents the position on the Challenger's opponentGrid
 			let challenger = this.Challenger
 			let player = this.Player
 
-			while (!found) {
+			let startTime = Date.now() //the time the loop was entered, used to detect if the computer can't play (5s timeout)
+			while (!found && !trapped) {
 				let aOccupied = 0
 
 				x = Math.floor(Math.random() * 10)
@@ -301,14 +328,18 @@ class Game {
 					//this way to check for the edge cases occasionally doesn't work and I will need to look into it
 					for (var i = -1; i <= 1; i += 2) { 
 						if(x + i >= 0 && x + i <= 9) {
-							aOccupied += challenger.opponentGrid[x + i][y] === TileState.EMPTY ? 0 : 1
-							console.log('x tile: ' + challenger.opponentGrid[x + i][y])
+							if(challenger.opponentGrid[x + i][y] !== TileState.EMPTY && challenger.opponentGrid[x + i][y] !== TileState.HIT) {
+								aOccupied += 1
+								console.log('x tile: ' + challenger.opponentGrid[x + i][y])
+							}
 						} else {
 							aOccupied++
 						}
 						if(y + i >= 0 && y + i <= 9) {
-							aOccupied += challenger.opponentGrid[x][y + i] === TileState.EMPTY ? 0 : 1
-							console.log('y tile: ' + challenger.opponentGrid[x][y + i])
+							if(challenger.opponentGrid[x][y + i] !== TileState.EMPTY && challenger.opponentGrid[x][y + i] !== TileState.HIT) {
+								aOccupied += 1
+								console.log('x tile: ' + challenger.opponentGrid[x][y + i])
+							}
 						} else {
 							aOccupied++
 						}
@@ -322,6 +353,11 @@ class Game {
 					}
 				}
 
+				if((Date.now() - startTime) > 5000) {
+					trapped = true
+					$('#oGrid').fadeOut(1000)
+				}
+
 			}
 
 			let targetCell = $('#oGrid #r' + y + ' #c' + x)
@@ -329,6 +365,8 @@ class Game {
 			switch (tile) {
 				case TileState.SHIP:
 					player.grid[x][y] = challenger.opponentGrid[x][y] = TileState.HIT //this will dereference the cell [x, y] in the opponentGrid but it should have no effect as they hold the same value
+
+					this.Challenger.shipsToHit -= 1
 
 					targetCell.addClass('hit')
 
@@ -339,6 +377,17 @@ class Game {
 					targetCell.addClass('miss')
 
 					break;
+			}
+
+			if(challenger.shipsToHit === 0) {
+				$('table')
+					.fadeOut(1000)
+					.promise()
+					.done(() => {
+						$('#outcomemessage').text('You lose!').fadeIn(600)
+					})
+				
+				return
 			}
 
 			this.GameState = GameState.PLAYER_PLAY
