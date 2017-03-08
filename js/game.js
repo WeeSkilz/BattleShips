@@ -1,6 +1,7 @@
 const electron = require('electron')
 const dateformat = require('dateformat')
 const { TileState } = require(path.join(appRoot.toString(), '/js/enums'))
+const RandomSearch = require(path.join(appRoot.toString(), '/js/searches/random'))
 
 class Game {
 	//TODO: Need to think of a good way to allow players to place ships using the keyboard.
@@ -80,6 +81,8 @@ class Game {
 	* @func
 	*/
 	renderPlaced() {
+		$('#oGrid .ship').removeClass('ship')
+		$('#oGrid .illegal').removeClass('illegal')
 		for (var i = 0; i < 10; i++) {
 			for (var j = 0; j < 10; j++) {
 				if(this.Player.grid[i][j] == TileState.SHIP)
@@ -95,7 +98,6 @@ class Game {
 	* @param {number} y - The y-coordinate of the cell where the cursor is
 	*/
 	mockShip(x, y) {
-		$('#oGrid .ship').removeClass('ship')
 		this.renderPlaced()
 
 		console.log('should be mocking at x: ' + x + ', y: ' + y)
@@ -105,7 +107,7 @@ class Game {
 
 			let tempy, tempx
 
-			console.log('xmod: ' + xmod + ', ymod: ' + ymod)
+			//console.log('xmod: ' + xmod + ', ymod: ' + ymod)
 
 			if(y + ymod <= 9) {
 				tempy = y + ymod
@@ -119,10 +121,41 @@ class Game {
 				tempx = x - ((x + xmod) - 9)
 			}
 
-			console.log('mocking at x: ' + tempx + ', y: ' + tempy)
+			//console.log('mocking at x: ' + tempx + ', y: ' + tempy)
 
-			$('#oGrid #r' + tempy + ' #c' + tempx).addClass('ship')
+			if(this.Player.grid[tempx][tempy] === TileState.EMPTY) {
+				$('#oGrid #r' + tempy + ' #c' + tempx).addClass('ship')
+			} else {
+				$('#oGrid #r' + tempy + ' #c' + tempx).removeClass('ship').addClass('illegal')
+			}
 		}
+	}
+
+	canPlace(x, y, len, placedirection, grid) {
+		for (let i = len; i >= 0; i--) {
+			const xmod = (placedirection === PlaceDirection.VERTICAL ? 0 : i)
+			const ymod = (placedirection === PlaceDirection.HORIZONTAL ? 0 : i)
+
+			let tempy, tempx
+
+			if(y + ymod <= 9) {
+				tempy = y + ymod
+			} else {
+				tempy = y - ((y + ymod) - 9)
+			}
+
+			if(x + xmod <= 9) {
+				tempx = x + xmod
+			} else {
+				tempx = x - ((x + xmod) - 9)
+			}
+
+			if(grid[tempx][tempy] === TileState.SHIP) {
+				return false //this will break from the loop as soon as the placement is impossible
+			}
+		}
+
+		return true
 	}
 
 	/**
@@ -135,9 +168,13 @@ class Game {
 		if(this.ShipsToPlace === 0)
 			return
 
+		if(!this.canPlace(x, y, this.ShipsToPlace, this.PlaceDirection, this.Player.grid)) {
+			return
+		}
+
 		for (let i = game.ShipsToPlace; i >= 0; i--) {
-			const xmod = (game.PlaceDirection === PlaceDirection.VERTICAL ? 0 : i)
-			const ymod = (game.PlaceDirection === PlaceDirection.HORIZONTAL ? 0 : i)
+			const xmod = (this.PlaceDirection === PlaceDirection.VERTICAL ? 0 : i)
+			const ymod = (this.PlaceDirection === PlaceDirection.HORIZONTAL ? 0 : i)
 
 			let tempy, tempx
 
@@ -242,8 +279,9 @@ class Game {
 		for (let i = 5; i > 1; i--) { //if we place the biggest ships first then we will have a higher chance of picking empty squares with the small ships maybe?
 			let found = false //assume true unless one tile changes it, guarantees that it will be false if not rather than true if not
 
+
+
 			while(!found) {
-				let isClear = true
 				x = Math.floor(Math.random() * 10)
 				y = Math.floor(Math.random() * 10)
 
@@ -253,32 +291,7 @@ class Game {
 					direction = PlaceDirection.HORIZONTAL
 				}
 
-				for(let j = 0; j < Number(i); j++) {
-					const xmod = (direction === PlaceDirection.VERTICAL ? 0 : j)
-					const ymod = (direction === PlaceDirection.HORIZONTAL ? 0 : j)
-
-					let tempy, tempx
-
-					if(y + ymod <= 9) {
-						tempy = y + ymod
-					} else {
-						tempy = y - ((y + ymod) - 9)
-					}
-
-					if(x + xmod <= 9) {
-						tempx = x + xmod
-					} else {
-						tempx = x - ((x + xmod) - 9)
-					}
-
-					if(this.Challenger.grid[tempx][tempy] === TileState.SHIP){
-						isClear = false
-					}
-					
-				}
-				if(isClear) {
-					found = true
-				}
+				found = this.canPlace(x, y, i, direction, this.Challenger.grid)
 			}
 
 			for(let k = 0; k < Number(i); k++) {
@@ -354,8 +367,7 @@ class Game {
 				}
 
 				if((Date.now() - startTime) > 5000) {
-					trapped = true
-					$('#oGrid').fadeOut(1000)
+					trapped = true //this should never happen. stops an irrecoverabke crash if it does somehow happen though
 				}
 
 			}

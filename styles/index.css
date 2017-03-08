@@ -99,6 +99,11 @@ td {
 	border-color:  #DADFE1;
 }
 
+.illegal {
+	background-color: #F22613 !important;
+	border-color:  #F22613 !important;
+}
+
 #back {
 	margin-top: 10vh;
 }
@@ -136,6 +141,6 @@ td {
 /*	Options Page   */
 /*******************/
 
-#controls {
+#controls, #window {
 	width: 40%;
 }

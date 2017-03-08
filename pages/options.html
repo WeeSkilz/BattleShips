@@ -5,6 +5,8 @@
 	<title>BattleShips</title>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css" crossorigin="anonymous">
 	<link rel="stylesheet" href="../styles/index.css">
+	<script>window.$ = window.jQuery = require('jquery')</script>
+	<script type="text/javascript" src="../js/options.js"></script>
 </head>
 <body>
 	<a href="index.html" class="button" id="mmenu">Back</a>
@@ -18,7 +20,7 @@
 			<input type="range" name="vol" value="100">
 
 			<label for="display"><h5>Display Mode</h5></label>
-			<select class="u-full-width" id="controls">
+			<select class="u-full-width" id="window">
 				<option value="windowed">Windowed</option>
 				<option value="fswindowed">Fullscreen Windowed</option>
 				<option value="fs">Fullscreen</option>
@@ -27,10 +29,10 @@
 
 
 			
-			<label for="controls"><h5>Controls</h5></label>
+			<label for="difficuly"><h5>Difficulty</h5></label>
 			<select class="u-full-width" id="controls">
-				<option value="mouse">Mouse</option>
-				<option value="keyboard">Keyboard</option>
+				<option value="easy">Easy</option>
+				<option value="normal">Normal</option>
 			</select>
 			<br>
 		</div>

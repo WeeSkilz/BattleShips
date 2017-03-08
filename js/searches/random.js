@@ -1,3 +1,4 @@
+
 class RandomSearch {
 	constructor(player, challenger) {
 		this.Player = player
@@ -49,10 +50,11 @@ class RandomSearch {
 
 			if((Date.now() - startTime) > 1000) {
 				trapped = true
-				$('#oGrid').fadeOut(1000)
 			}
 
 		}
+
+		return new Tile(x, y)
 	}
 }
 

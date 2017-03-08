@@ -1,5 +1,5 @@
 class Tile {
-	constructor(x, y, tilestate) {
+	constructor(x, y, tilestate = TileState.EMPTY) {
 		this.X = x
 		this.Y = y
 		this.TileState = tilestate

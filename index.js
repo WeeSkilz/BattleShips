@@ -62,14 +62,20 @@ ipcMain.on('close', (event, args) => {
 })
 
 ipcMain.on('changeWindow', (event, args) => {
-	if(args === WindowState.FULLSCREEN_WINDOWED) {
-		mainWindow.setKiosk(false)
-		mainWindow.maximize()
-		mainWindow.setResizable(false)
-	} else if(args === WindowState.WINDOWED) {
-		mainWindow.setKiosk(false)
-		mainWindow.setResizable(true)
-	} else if(args === WindowState.FULLSCREEN) {
-		mainWindow.setKiosk(true)
+//I need to save this state to restore it next time the menu is opened.
+
+	switch(args) {
+		case WindowState.FULLSCREEN_WINDOWED:
+			mainWindow.setKiosk(false)
+			mainWindow.maximize()
+			mainWindow.setResizable(false)
+			break
+		case WindowState.WINDOWED:
+			mainWindow.setKiosk(false)
+			mainWindow.setResizable(true)
+			break
+		case WindowState.FULLSCREEN:
+			mainWindow.setKiosk(true)
+			break
 	}
 })
