@@ -17,3 +17,5 @@ class Tile {
 		return this.TileState
 	}
 }
+
+module.exports = Tile

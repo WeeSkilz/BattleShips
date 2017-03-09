@@ -2,6 +2,7 @@ const electron = require('electron')
 const dateformat = require('dateformat')
 const { TileState } = require(path.join(appRoot.toString(), '/js/enums'))
 const RandomSearch = require(path.join(appRoot.toString(), '/js/searches/random'))
+const RadialSearch = require(path.join(appRoot.toString(), '/js/searches/radial'))
 
 class Game {
 	//TODO: Need to think of a good way to allow players to place ships using the keyboard.
@@ -324,67 +325,47 @@ class Game {
 	*/
 	computerMove() {
 		//setTimeout(() => {
-			let found, trapped = false //whether the algorithm has found a space to play in
-			let x, y
-			let tile, localTile //localTile represents the position on the Challenger's opponentGrid
-			let challenger = this.Challenger
 			let player = this.Player
+			let challenger = this.Challenger
 
-			let startTime = Date.now() //the time the loop was entered, used to detect if the computer can't play (5s timeout)
-			while (!found && !trapped) {
-				let aOccupied = 0
-
-				x = Math.floor(Math.random() * 10)
-				y = Math.floor(Math.random() * 10)
-
-				if(challenger.opponentGrid[x][y] === TileState.EMPTY) {
-					//this way to check for the edge cases occasionally doesn't work and I will need to look into it
-					for (var i = -1; i <= 1; i += 2) { 
-						if(x + i >= 0 && x + i <= 9) {
-							if(challenger.opponentGrid[x + i][y] !== TileState.EMPTY && challenger.opponentGrid[x + i][y] !== TileState.HIT) {
-								aOccupied += 1
-								console.log('x tile: ' + challenger.opponentGrid[x + i][y])
-							}
-						} else {
-							aOccupied++
-						}
-						if(y + i >= 0 && y + i <= 9) {
-							if(challenger.opponentGrid[x][y + i] !== TileState.EMPTY && challenger.opponentGrid[x][y + i] !== TileState.HIT) {
-								aOccupied += 1
-								console.log('x tile: ' + challenger.opponentGrid[x][y + i])
-							}
-						} else {
-							aOccupied++
-						}
-					}
-
-					console.log('Occupied: ' + aOccupied)
-					if(aOccupied !== 4) {
-						tile = player.grid[x][y]
-						localTile = challenger.opponentGrid[x][y]
-						found = true
-					}
-				}
-
-				if((Date.now() - startTime) > 5000) {
-					trapped = true //this should never happen. stops an irrecoverabke crash if it does somehow happen though
-				}
-
+			if(!challenger.search) {
+				challenger.search = new RandomSearch(player, challenger)
 			}
 
-			let targetCell = $('#oGrid #r' + y + ' #c' + x)
+			const search = challenger.search
 
-			switch (tile) {
+			let tile = search.findNext()
+
+			if(!tile) {
+				challenger.search = new RandomSearch(player, challenger)
+				this.computerMove()
+				return
+			}
+
+			console.log(JSON.stringify(tile))
+
+			let targetCell = $('#oGrid #r' + tile.Y + ' #c' + tile.X)
+
+			switch (tile.TileState) {
 				case TileState.SHIP:
-					player.grid[x][y] = challenger.opponentGrid[x][y] = TileState.HIT //this will dereference the cell [x, y] in the opponentGrid but it should have no effect as they hold the same value
+					player.grid[tile.X][tile.Y] = challenger.opponentGrid[tile.X][tile.Y] = TileState.HIT //this will dereference the cell [x, y] in the opponentGrid but it should have no effect as they hold the same value
 
-					this.Challenger.shipsToHit -= 1
+					if(challenger.search instanceof RandomSearch) {
+						challenger.search = new RadialSearch(player, challenger, tile.X, tile.Y)
+					} else if(challenger.search instanceof RadialSearch) {
+						//linear
+						if(challenger.search.Stage === 4) {
+							challenger.search = null
+						}
+					}
+
+					this.Challenger.shipsToHit--
 
 					targetCell.addClass('hit')
 
 					break;
 				case TileState.EMPTY:
-					player.grid[x][y] = challenger.opponentGrid[x][y] = TileState.MISS
+					player.grid[tile.X][tile.Y] = challenger.opponentGrid[tile.X][tile.Y] = TileState.MISS
 
 					targetCell.addClass('miss')
 

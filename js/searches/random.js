@@ -1,3 +1,5 @@
+const { TileState } = require(path.join(appRoot.toString(), '/js/enums'))
+const Tile = require(path.join(appRoot.toString(), '/js/tile'))
 
 class RandomSearch {
 	constructor(player, challenger) {
@@ -43,7 +45,6 @@ class RandomSearch {
 				console.log('Occupied: ' + aOccupied)
 				if(aOccupied !== 4) {
 					tile = player.grid[x][y]
-					localTile = challenger.opponentGrid[x][y]
 					found = true
 				}
 			}
@@ -54,7 +55,7 @@ class RandomSearch {
 
 		}
 
-		return new Tile(x, y)
+		return new Tile(x, y, tile)
 	}
 }
 
