@@ -2,8 +2,9 @@
   "name": "battleships",
   "productName": "Battleships",
   "version": "0.0.0",
-  "description": "My divine app",
+  "description": "My BattleShips game for my Advanced Higher computing project.",
   "license": "MIT",
+  "homepage": "https://github.com/WeeSkilz/BattleShips",
   "repository": "WeeSkilz/battleships",
   "author": {
     "name": "Connor",

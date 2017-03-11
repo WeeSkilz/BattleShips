@@ -37,8 +37,8 @@ class Game {
 	* @param {number} number - Number at this stage in recusion
 	*/
 	recurseShipNumber(number) {
-		if(number > 1) {
-			return number + this.recurseShipNumber(number - 1)
+		if(number > 1) { //while the number of ships left is more than one (1 is the threshold because there are no 1 box big ships)
+			return number + this.recurseShipNumber(number - 1) //call the function again and decrement the number as the parameter
 		}
 		return 0
 	}
@@ -49,10 +49,10 @@ class Game {
 	* @param {string} id - The id of the table tag in html
 	*/
 	constructGrid(id) {
-		for (var i = 0; i < 10; i++) {
-			let outer = $(id).find('tbody:last').append($('<tr id="r' + i + '">'))
-			for (var j = 0; j < 10; j++) {
-				$(id).find('tr:last').append($('<td id="c' + j + '">'))
+		for (var i = 0; i < 10; i++) { //the outer loop for the grid, represents y
+			let outer = $(id).find('tbody:last').append($('<tr id="r' + i + '">')) //creates a new y row
+			for (var j = 0; j < 10; j++) { //the inner loop representing x
+				$(id).find('tr:last').append($('<td id="c' + j + '">')) //creates a new element in the x direction inside the table row just created
 			}
 		}
 	}
@@ -63,18 +63,18 @@ class Game {
 	* @param {object} player - The player object for which the arrays are to be created
 	*/
 	createAndPopulateGrid(player) {
-		player.grid = []
-		player.opponentGrid = []
-		console.log(dateformat(Date.now(), "HH:MM:ss:l") + ' ' + player.name + ' grids initialised')
+		player.grid = [] //the representation of this player's own grid
+		player.opponentGrid = [] //the representation of the player's opponent's grid
+		console.log(dateformat(Date.now(), "HH:MM:ss:l") + ' ' + player.name + ' grids initialised') //a debugging output
 		for (var i = 0; i < 10; i++) { //this is a loop to populate the player's grid as empty
-			player.grid[i] = []
-			player.opponentGrid[i] = []
-			for (var j = 0; j < 10; j++) {
-				player.grid[i][j] = 0
+			player.grid[i] = [] //creates an empty array and puts it in the element at the index i of the player's grid
+			player.opponentGrid[i] = [] //creates an empty array and puts it in the element at the index i of the player's opponent grid
+			for (var j = 0; j < 10; j++) { //this populates the array just created
+				player.grid[i][j] = 0 //all elements are set to 0 to signify an empty tile
 				player.opponentGrid[i][j] = 0
 			}
 		}
-		console.log(dateformat(Date.now(), "HH:MM:ss:l") + ' ' + player.name + ' grids populated')
+		console.log(dateformat(Date.now(), "HH:MM:ss:l") + ' ' + player.name + ' grids populated') //a debugging output
 	}
 
 	/**
@@ -82,12 +82,12 @@ class Game {
 	* @func
 	*/
 	renderPlaced() {
-		$('#oGrid .ship').removeClass('ship')
-		$('#oGrid .illegal').removeClass('illegal')
-		for (var i = 0; i < 10; i++) {
-			for (var j = 0; j < 10; j++) {
-				if(this.Player.grid[i][j] == TileState.SHIP)
-					$('#oGrid #r' + j + ' #c' + i).addClass('ship')
+		$('#oGrid .ship').removeClass('ship') //clear all ships on the grid
+		$('#oGrid .illegal').removeClass('illegal') //clear all cells that are signifying an illegal position
+		for (var i = 0; i < 10; i++) { //outer loop representing x
+			for (var j = 0; j < 10; j++) { //inner loop representing y
+				if(this.Player.grid[i][j] == TileState.SHIP) //checks if the position in the array has a ship populating the element
+					$('#oGrid #r' + j + ' #c' + i).addClass('ship') //if so, it sets the appropriate class on the html element to display it
 			}
 		}
 	}
@@ -99,39 +99,44 @@ class Game {
 	* @param {number} y - The y-coordinate of the cell where the cursor is
 	*/
 	mockShip(x, y) {
-		this.renderPlaced()
+		this.renderPlaced() //render all the ships that have already been placed
 
-		console.log('should be mocking at x: ' + x + ', y: ' + y)
-		for (let i = (game.ShipsToPlace); i >= 0; i--) {
-			const xmod = (game.PlaceDirection === PlaceDirection.VERTICAL ? 0 : i)
-			const ymod = (game.PlaceDirection === PlaceDirection.HORIZONTAL ? 0 : i)
+		console.log('should be mocking at x: ' + x + ', y: ' + y) //a debugging output
+		for (let i = (game.ShipsToPlace); i >= 0; i--) { //loop the number of times as the length of the current ship being placed
+			const xmod = (game.PlaceDirection === PlaceDirection.VERTICAL ? 0 : i) //if the PlaceDirection is horizontal, index i becomes the offset in the x direction, 0 if not
+			const ymod = (game.PlaceDirection === PlaceDirection.HORIZONTAL ? 0 : i) //if the PlaceDirection is vertical, index i becomes the offset in the y direction, 0 if not
 
-			let tempy, tempx
+			let tempy, tempx //declare the variables that will represent the position after the x and y coordinates have been modified
 
-			//console.log('xmod: ' + xmod + ', ymod: ' + ymod)
-
-			if(y + ymod <= 9) {
-				tempy = y + ymod
-			} else {
-				tempy = y - ((y + ymod) - 9)
+			if(y + ymod <= 9) { //if the modified length fits inside the grid
+				tempy = y + ymod //set the y position of the element to be the y modified
+			} else { //the modified length would result in the ship overflowing off the edge of the grid
+				tempy = y - ((y + ymod) - 9) //alter the coordinate of the box to be before the cursor's position keeping the ship bound by the grid
 			}
 
-			if(x + xmod <= 9) {
-				tempx = x + xmod
-			} else {
-				tempx = x - ((x + xmod) - 9)
+			if(x + xmod <= 9) { //if the modified length fits inside the grid
+				tempx = x + xmod //set the x position of the element to be the x modified
+			} else { //the modified length would result in the ship overflowing off the edge of the grid
+				tempx = x - ((x + xmod) - 9) //alter the coordinate of the box to be before the cursor's position keeping the ship bound by the grid
 			}
 
-			//console.log('mocking at x: ' + tempx + ', y: ' + tempy)
-
-			if(this.Player.grid[tempx][tempy] === TileState.EMPTY) {
-				$('#oGrid #r' + tempy + ' #c' + tempx).addClass('ship')
-			} else {
-				$('#oGrid #r' + tempy + ' #c' + tempx).removeClass('ship').addClass('illegal')
+			if(this.Player.grid[tempx][tempy] === TileState.EMPTY) { //check that the element in the array is empty (has no ship there)
+				$('#oGrid #r' + tempy + ' #c' + tempx).addClass('ship') //set the class on the html element to display the ship colour
+			} else { //if there is a ship in that position
+				$('#oGrid #r' + tempy + ' #c' + tempx).removeClass('ship').addClass('illegal') //then display the red 'illegal' warning class showing ship cannot be placed there
 			}
 		}
 	}
 
+	/**
+	* Tests if a ship can be placed at the position on the grid provided under the orientation provided
+	* @func
+	* @param {number} x - The x coordinate of the starting cell position
+	* @param {number} y - The y coordinate of the starting cell position
+	* @param {number} len - The length of the ship to be placed
+	* @param {number} placedirection - The PlaceDirection that shows along what axis the ship is to be placed
+	* @param {object} grid - The 2D array representing the grid that the ship is to be placed on
+	*/
 	canPlace(x, y, len, placedirection, grid) {
 		for (let i = len; i >= 0; i--) {
 			const xmod = (placedirection === PlaceDirection.VERTICAL ? 0 : i)
@@ -166,8 +171,8 @@ class Game {
 	* @param {number} y - The y-coordinate of the cell where the cursor is
 	*/
 	placeShip(x, y) {
-		if(this.ShipsToPlace === 0)
-			return
+		if(this.ShipsToPlace === 0) //if there are no more ships to be placed
+			return //don't do anything
 
 		if(!this.canPlace(x, y, this.ShipsToPlace, this.PlaceDirection, this.Player.grid)) {
 			return
@@ -179,7 +184,7 @@ class Game {
 
 			let tempy, tempx
 
-			console.log('xmod: ' + xmod + ', ymod: ' + ymod)
+			console.log('xmod: ' + xmod + ', ymod: ' + ymod) //a debugging output
 
 			if(y + ymod <= 9) {
 				tempy = y + ymod
@@ -193,7 +198,7 @@ class Game {
 				tempx = x - ((x + xmod) - 9)
 			}
 
-			console.log('placing at x: ' + tempx + ', y: ' + tempy)
+			console.log('placing at x: ' + tempx + ', y: ' + tempy) //a debugging output
 
 			$('#oGrid #r' + tempy + ' #c' + tempx).addClass('ship')
 			this.Player.grid[tempx][tempy] = TileState.SHIP
@@ -220,7 +225,7 @@ class Game {
 		let challenger = this.Challenger
 
 		if(this.GameState !== GameState.PLAYER_PLAY) {
-			console.log(dateformat(Date.now(), "HH:MM:ss:l") + ' Player attempted to move, but the GameState was not PLAYER_PLAY:1, GameState is ' + this.GameState)
+			console.log(dateformat(Date.now(), "HH:MM:ss:l") + ' Player attempted to move, but the GameState was not PLAYER_PLAY:1, GameState is ' + this.GameState) //a debugging output
 			return
 		}
 			
@@ -236,17 +241,17 @@ class Game {
 
 				targetCell.addClass('hit')
 
-				console.log(dateformat(Date.now(), "HH:MM:ss:l") + ' hit recorded. x:' + x + ' y:' + y)
+				console.log(dateformat(Date.now(), "HH:MM:ss:l") + ' hit recorded. x:' + x + ' y:' + y) //a debugging output
 				player.shipsToHit -= 1
 			} else {
 				player.opponentGrid[x][y] = TileState.MISS
 
 				targetCell.addClass('miss')
 
-				console.log(dateformat(Date.now(), "HH:MM:ss:l") + ' miss recorded. x:' + x + ' y:' + y)
+				console.log(dateformat(Date.now(), "HH:MM:ss:l") + ' miss recorded. x:' + x + ' y:' + y) //a debugging output
 			}
 		} else {
-			console.log(dateformat(Date.now(), "HH:MM:ss:l") + ' tile selected already. x:' + x + ' y:' + y)
+			console.log(dateformat(Date.now(), "HH:MM:ss:l") + ' tile selected already. x:' + x + ' y:' + y) //a debugging output
 			return
 		}
 
@@ -342,8 +347,6 @@ class Game {
 				return
 			}
 
-			console.log(JSON.stringify(tile))
-
 			let targetCell = $('#oGrid #r' + tile.Y + ' #c' + tile.X)
 
 			switch (tile.TileState) {
@@ -388,7 +391,7 @@ class Game {
 			$('#pGrid>tbody').addClass('turn')
 			$('#oGrid>tbody').removeClass('turn')
 
-			console.log(dateformat(Date.now(), "HH:MM:ss:l") + ' Changed GameState to PLAYER_PLAY:' + this.GameState)
+			console.log(dateformat(Date.now(), "HH:MM:ss:l") + ' Changed GameState to PLAYER_PLAY:' + this.GameState) //a debugging output
 			
 		//},
 		//Math.random() * 5000)
