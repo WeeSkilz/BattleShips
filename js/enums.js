@@ -75,3 +75,10 @@ const WindowState = Object.freeze({
 })
 
 module.exports.WindowState = WindowState
+
+const Difficulty = Object.freeze({
+	EASY: 0,
+	NORMAL: 1
+})
+
+module.exports.Difficulty = Difficulty

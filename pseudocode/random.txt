@@ -1,0 +1,48 @@
+CLASS RandomSearch
+	DECLARE OBJECT Player
+	DECLARE OBJECT Challenger
+
+	CONSTRUCTOR player, challenger
+		Player = player
+		Challenger = challenger
+	END CONSTRUCTOR
+
+	FUNCTION findNext()
+		DECLARE BOOLEAN found = FALSE
+		DECLARE BOOLEAN trapped = FALSE
+		DECLARE OBJECT tile
+
+		WHILE NOT found AND NOT trapped
+			DECLARE INTEGER aOccupied = 0
+
+			IF Challenger.opponentGrid[x][y] == <empty>
+				FOR modifier = -1 TO 1 STEP 2
+					IF x + modifier >= 0 AND x + modifier <=9
+						IF <the square has been played in>
+							aOccupied = aOccupied + 1
+						END IF
+					ELSE
+						aOccupied = aOccupied + 1
+					END IF
+
+					IF y + modifier >= 0 AND y + modifier <=9
+						IF <the square has been played in>
+							aOccupied = aOccupied + 1
+						END IF
+					ELSE
+						aOccupied = aOccupied + 1
+					END IF
+				END FOR
+
+				IF aOccupied != 4
+					tile = Player.grid[x][y]
+					found = true
+				END IF
+			END IF
+
+			<if it has taken more than 5 seconds escape the loop and try again>
+		END WHILE
+
+		RETURN NEW Tile(x, y, tile)
+	END FUNCTION
+END CLASS

@@ -1,0 +1,14 @@
+CLASS Tile
+	DECLARE INTEGER X
+	DECLARE INTEGER Y
+	DECLARE INTEGER TileState
+
+	CONSTRUCTOR x, y, tilestate
+		IF <no tilestate provided>
+			TileState = <empty>
+		END IF
+
+		X = x
+		Y = y
+	END CONSTRUCTOR
+END CLASS

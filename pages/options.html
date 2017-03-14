@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<title>BattleShips</title>
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css" crossorigin="anonymous">
+	<link rel="stylesheet" href="../styles/skeleton.min.css" crossorigin="anonymous">
 	<link rel="stylesheet" href="../styles/index.css">
 	<script>window.$ = window.jQuery = require('jquery')</script>
 	<script type="text/javascript" src="../js/options.js"></script>
@@ -16,6 +16,9 @@
 		</div>
 
 		<div id="buttons">
+			<label for="range"><h5 id="delay-label">Delay (0)</h5></label>
+			<input id="delay" type="range" name="delay" min="0" max="5">
+
 			<label for="display"><h5>Display Mode</h5></label>
 			<select class="u-full-width" id="window">
 				<option value="windowed">Windowed</option>
@@ -26,8 +29,8 @@
 
 
 			
-			<label for="difficuly"><h5>Difficulty</h5></label>
-			<select class="u-full-width" id="controls">
+			<label for="difficulty"><h5>Difficulty</h5></label>
+			<select class="u-full-width" id="difficulty">
 				<option value="easy">Easy</option>
 				<option value="normal">Normal</option>
 			</select>

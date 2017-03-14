@@ -6,14 +6,14 @@ class Tile {
 	}
 
 	get x() {
-		return this.X
+		return this.X //this allows use of tile.x as well as tile.X
 	}
 
 	get y() {
-		return this.Y
+		return this.Y //this allows use of tile.y as well as tile.Y
 	}
 
-	get tilestate() {
+	get tilestate() { //this allows use of tile.tilestate as well as tile.TileState
 		return this.TileState
 	}
 }

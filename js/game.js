@@ -1,8 +1,9 @@
 const electron = require('electron')
 const dateformat = require('dateformat')
-const { TileState } = require(path.join(appRoot.toString(), '/js/enums'))
+const { TileState, Difficulty } = require(path.join(appRoot.toString(), '/js/enums'))
 const RandomSearch = require(path.join(appRoot.toString(), '/js/searches/random'))
 const RadialSearch = require(path.join(appRoot.toString(), '/js/searches/radial'))
+const { ipcRenderer } = require('electron')
 
 class Game {
 	//TODO: Need to think of a good way to allow players to place ships using the keyboard.
@@ -15,6 +16,7 @@ class Game {
 	* @param {object} gamemode - The GameMode
 	*/
 	constructor(player, challenger, gamemode) {
+		this.Config = ipcRenderer.sendSync('getConfig')
 		this.Player = player
 		this.Challenger = challenger ? challenger : { name: 'Challenger Bot' } //this is the basic introduction to the multiplayer mechanic
 		this.GameMode = gamemode //another feature for multiplayer
@@ -103,8 +105,8 @@ class Game {
 
 		console.log('should be mocking at x: ' + x + ', y: ' + y) //a debugging output
 		for (let i = (game.ShipsToPlace); i >= 0; i--) { //loop the number of times as the length of the current ship being placed
-			const xmod = (game.PlaceDirection === PlaceDirection.VERTICAL ? 0 : i) //if the PlaceDirection is horizontal, index i becomes the offset in the x direction, 0 if not
-			const ymod = (game.PlaceDirection === PlaceDirection.HORIZONTAL ? 0 : i) //if the PlaceDirection is vertical, index i becomes the offset in the y direction, 0 if not
+			const xmod = (game.PlaceDirection === PlaceDirection.HORIZONTAL ? i : 0) //if the PlaceDirection is horizontal, index i becomes the offset in the x direction, 0 if not
+			const ymod = (game.PlaceDirection === PlaceDirection.VERTICAL ? i : 0) //if the PlaceDirection is vertical, index i becomes the offset in the y direction, 0 if not
 
 			let tempy, tempx //declare the variables that will represent the position after the x and y coordinates have been modified
 
@@ -156,7 +158,7 @@ class Game {
 				tempx = x - ((x + xmod) - 9)
 			}
 
-			if(grid[tempx][tempy] === TileState.SHIP) {
+			if(grid[tempx][tempy] === TileState.SHIP) { //if there's a ship in that element
 				return false //this will break from the loop as soon as the placement is impossible
 			}
 		}
@@ -174,17 +176,14 @@ class Game {
 		if(this.ShipsToPlace === 0) //if there are no more ships to be placed
 			return //don't do anything
 
-		if(!this.canPlace(x, y, this.ShipsToPlace, this.PlaceDirection, this.Player.grid)) {
+		if(!this.canPlace(x, y, this.ShipsToPlace, this.PlaceDirection, this.Player.grid))
 			return
-		}
 
 		for (let i = game.ShipsToPlace; i >= 0; i--) {
 			const xmod = (this.PlaceDirection === PlaceDirection.VERTICAL ? 0 : i)
 			const ymod = (this.PlaceDirection === PlaceDirection.HORIZONTAL ? 0 : i)
 
 			let tempy, tempx
-
-			console.log('xmod: ' + xmod + ', ymod: ' + ymod) //a debugging output
 
 			if(y + ymod <= 9) {
 				tempy = y + ymod
@@ -198,20 +197,18 @@ class Game {
 				tempx = x - ((x + xmod) - 9)
 			}
 
-			console.log('placing at x: ' + tempx + ', y: ' + tempy) //a debugging output
-
-			$('#oGrid #r' + tempy + ' #c' + tempx).addClass('ship')
-			this.Player.grid[tempx][tempy] = TileState.SHIP
+			$('#oGrid #r' + tempy + ' #c' + tempx).addClass('ship') //display the ship on the grid
+			this.Player.grid[tempx][tempy] = TileState.SHIP //save the ship position
 		}
 
-		if(this.ShipsToPlace === 1) {
-			this.placeComputerShips()
-			this.GameState = GameState.PLAYER_PLAY
-			$('#oGrid>tbody').removeClass('place')
-			$('#pGrid>tbody').addClass('turn')
+		if(this.ShipsToPlace === 1) { //if this is the final ship being placed
+			this.placeComputerShips() //place all of the computer ships
+			this.GameState = GameState.PLAYER_PLAY //allow the player to make their turn
+			$('#oGrid>tbody').removeClass('place') //we're no longer in the placing stage so this doesn't get shown
+			$('#pGrid>tbody').addClass('turn') //show that it's the player's turn
 		}
 
-		this.ShipsToPlace--
+		this.ShipsToPlace-- //there's one less ship to be placed
 	}
 
 	/**
@@ -224,38 +221,32 @@ class Game {
 		let player = this.Player
 		let challenger = this.Challenger
 
-		if(this.GameState !== GameState.PLAYER_PLAY) {
-			console.log(dateformat(Date.now(), "HH:MM:ss:l") + ' Player attempted to move, but the GameState was not PLAYER_PLAY:1, GameState is ' + this.GameState) //a debugging output
+		if(this.GameState !== GameState.PLAYER_PLAY)
 			return
-		}
-			
 
-		let targetTile = player.opponentGrid[x][y]
-		let targetCell = $('#pGrid #r' + y + ' #c' + x)
+		let targetTile = player.opponentGrid[x][y] //the element in the array that is being targeted
+		let targetCell = $('#pGrid #r' + y + ' #c' + x) //the graphical representation of where is being targeted
 
-		if(targetTile !== TileState.MISS && targetTile !== TileState.HIT) {
-			let opponentTile = challenger.grid[x][y]
+		if(targetTile !== TileState.MISS && targetTile !== TileState.HIT) { //if the tile hasn't been played in already
+			let opponentTile = challenger.grid[x][y] //we fetch the opponent's view of the tile
 
-			if(opponentTile === TileState.SHIP) {
-				challenger.grid[x][y] = player.opponentGrid[x][y] = TileState.HIT
+			if(opponentTile === TileState.SHIP) { //if it has a ship in it
+				challenger.grid[x][y] = player.opponentGrid[x][y] = TileState.HIT //we set both grids to record a hit
 
-				targetCell.addClass('hit')
+				targetCell.addClass('hit') //we show the hit to the player
 
-				console.log(dateformat(Date.now(), "HH:MM:ss:l") + ' hit recorded. x:' + x + ' y:' + y) //a debugging output
-				player.shipsToHit -= 1
+				player.shipsToHit -= 1 //decrement the number of ships left to be hit
 			} else {
-				player.opponentGrid[x][y] = TileState.MISS
+				challenger.grid[x][y] = player.opponentGrid[x][y] = TileState.MISS //set both grids to record a miss
 
-				targetCell.addClass('miss')
+				targetCell.addClass('miss') //display a miss to the player
 
-				console.log(dateformat(Date.now(), "HH:MM:ss:l") + ' miss recorded. x:' + x + ' y:' + y) //a debugging output
 			}
 		} else {
-			console.log(dateformat(Date.now(), "HH:MM:ss:l") + ' tile selected already. x:' + x + ' y:' + y) //a debugging output
 			return
 		}
 
-		if(player.shipsToHit === 0) {
+		if(player.shipsToHit === 0) { //if the player has sunk all of their opponent's ships we display the lose animation
 			$('table')
 				.fadeOut(1000)
 				.promise()
@@ -267,7 +258,7 @@ class Game {
 		if(this.GameMode === GameMode.AI) { //player vs computer
 			$('#pGrid>tbody').removeClass('turn')
 			$('#oGrid>tbody').addClass('turn')
-			this.GameState = GameState.OPPONENT_PLAY
+			this.GameState = GameState.OPPONENT_PLAY //it's the opponent's turn
 			this.computerMove() //make the computer move against the player
 		} else if(this.GameMode = GameMode.PVP) {
 			//update the gamestate to allow the other player to play (multiplayer)
@@ -282,27 +273,27 @@ class Game {
 		let x,y
 		let direction
 
-		for (let i = 5; i > 1; i--) { //if we place the biggest ships first then we will have a higher chance of picking empty squares with the small ships maybe?
+		for (let i = 5; i > 1; i--) { //if we place the biggest ships first then we will have a higher chance of picking empty squares with the small ships
 			let found = false //assume true unless one tile changes it, guarantees that it will be false if not rather than true if not
 
 
 
 			while(!found) {
-				x = Math.floor(Math.random() * 10)
-				y = Math.floor(Math.random() * 10)
+				x = Math.floor(Math.random() * 10) //generate a random x between 0 and 9
+				y = Math.floor(Math.random() * 10) //generate a random y between 0 and 9
 
-				if(Math.random() >= 0.5) {
+				if(Math.random() >= 0.5) { //random true/false as Math.random() produces a number between 0 and 1
 					direction = PlaceDirection.VERTICAL
 				} else {
 					direction = PlaceDirection.HORIZONTAL
 				}
 
-				found = this.canPlace(x, y, i, direction, this.Challenger.grid)
+				found = this.canPlace(x, y, i, direction, this.Challenger.grid) //check if the stuff generated is a legal placement
 			}
 
-			for(let k = 0; k < Number(i); k++) {
-				const xmod = (direction === PlaceDirection.VERTICAL ? 0 : k)
-				const ymod = (direction === PlaceDirection.HORIZONTAL ? 0 : k)
+			for(let j = 0; j < Number(i); j++) { //place a ship of length i
+				const xmod = (direction === PlaceDirection.VERTICAL ? 0 : j)
+				const ymod = (direction === PlaceDirection.HORIZONTAL ? 0 : j)
 
 				let tempy, tempx
 
@@ -318,8 +309,7 @@ class Game {
 					tempx = x - ((x + xmod) - 9)
 				}
 
-				this.Challenger.grid[tempx][tempy] = TileState.SHIP
-				//$('#pGrid #r' + tempy + ' #c' + tempx).addClass('ship') //for testing
+				this.Challenger.grid[tempx][tempy] = TileState.SHIP //set the position of the ship in the array
 			}
 		}
 	}
@@ -329,72 +319,69 @@ class Game {
 	* @func
 	*/
 	computerMove() {
-		//setTimeout(() => {
+		setTimeout(() => {
 			let player = this.Player
 			let challenger = this.Challenger
+			let config = this.Config
 
-			if(!challenger.search) {
-				challenger.search = new RandomSearch(player, challenger)
+			if(!challenger.search) { //if no search is currently set
+				challenger.search = new RandomSearch(player, challenger) //we use a random search by default
 			}
 
-			const search = challenger.search
+			const search = challenger.search //shorten the name if it is going to be used
 
-			let tile = search.findNext()
+			let tile = search.findNext() //whatever search is being used, find the next target tile
 
-			if(!tile) {
-				challenger.search = new RandomSearch(player, challenger)
-				this.computerMove()
+			if(!tile) { //if the radial search has finished
+				challenger.search = new RandomSearch(player, challenger) //change back to random search to look for another hit
+				this.computerMove() //move again
 				return
 			}
 
-			let targetCell = $('#oGrid #r' + tile.Y + ' #c' + tile.X)
+			let targetCell = $('#oGrid #r' + tile.Y + ' #c' + tile.X) //the cell in the table
 
-			switch (tile.TileState) {
-				case TileState.SHIP:
+			switch (tile.TileState) { //the tilestate of the target cell
+				case TileState.SHIP: //if it's a ship
 					player.grid[tile.X][tile.Y] = challenger.opponentGrid[tile.X][tile.Y] = TileState.HIT //this will dereference the cell [x, y] in the opponentGrid but it should have no effect as they hold the same value
 
-					if(challenger.search instanceof RandomSearch) {
-						challenger.search = new RadialSearch(player, challenger, tile.X, tile.Y)
-					} else if(challenger.search instanceof RadialSearch) {
-						//linear
-						if(challenger.search.Stage === 4) {
-							challenger.search = null
+					if(challenger.search instanceof RandomSearch && config.difficulty === Difficulty.NORMAL) { //if the current search is random and difficulty is normal, start a radial search
+						challenger.search = new RadialSearch(player, challenger, tile.X, tile.Y) //instantiate the radial search
+					} else if(challenger.search instanceof RadialSearch) { //if it's a radial search 
+						if(challenger.search.Stage === 4) { //if the search has completed its final stage
+							challenger.search = null //set search to null, it will be set to a random search next time computerMove is called
 						}
 					}
 
-					this.Challenger.shipsToHit--
+					challenger.shipsToHit-- //decrement the number of ships the computer has to hit
 
-					targetCell.addClass('hit')
+					targetCell.addClass('hit') //display to the user that their ship has been hit
 
 					break;
-				case TileState.EMPTY:
-					player.grid[tile.X][tile.Y] = challenger.opponentGrid[tile.X][tile.Y] = TileState.MISS
+				case TileState.EMPTY: //if the tile is empty
+					player.grid[tile.X][tile.Y] = challenger.opponentGrid[tile.X][tile.Y] = TileState.MISS //set the array to a miss
 
-					targetCell.addClass('miss')
+					targetCell.addClass('miss') //display a miss
 
 					break;
 			}
 
-			if(challenger.shipsToHit === 0) {
-				$('table')
+			if(challenger.shipsToHit === 0) { //if all of the user's ships have been sunk
+				$('table') //display the lose message
 					.fadeOut(1000)
 					.promise()
 					.done(() => {
 						$('#outcomemessage').text('You lose!').fadeIn(600)
 					})
 				
-				return
+				return //break at the end of game
 			}
 
-			this.GameState = GameState.PLAYER_PLAY
+			this.GameState = GameState.PLAYER_PLAY //change it to the user's turn
 
-			$('#pGrid>tbody').addClass('turn')
-			$('#oGrid>tbody').removeClass('turn')
-
-			console.log(dateformat(Date.now(), "HH:MM:ss:l") + ' Changed GameState to PLAYER_PLAY:' + this.GameState) //a debugging output
-			
-		//},
-		//Math.random() * 5000)
+			$('#pGrid>tbody').addClass('turn') //change the turn to the user's
+			$('#oGrid>tbody').removeClass('turn') //remove the computer turn indicator
+		},
+		Math.random() * (this.Config.delay * 1000))
 	}
 }
 

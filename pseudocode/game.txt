@@ -1,0 +1,332 @@
+CLASS game
+	DECLARE OBJECT Config
+	DECLARE OBJECT Player
+	DECLARE OBJECT Challenger
+	DECLARE INTEGER GameMode
+	DECLARE	INTEGER PlaceDirection
+	DECLARE INTEGER ShipsToPlace = 4
+
+
+	CONSTRUCTOR player, challenger, gamemode
+		Config = <get config object>
+		Player = player
+		Challenger = challenger
+		GameMode = gamemode
+
+		createAndPopulateGrid(Player)
+		createAndPopulateGrid(Challenger)
+
+		constructGrid(<playergrid>)
+		constructGrid(<challengergrid>)
+
+		<highlight opponentGrid>
+
+		let shipTilesNum = recurseShipNumber(ShipsToPlace + 1)
+		Player.shipsToHit = shipTilesNum
+		Challenger.shipsToHit = shipTilesNum
+	END CONSTRUCTOR
+
+	FUNCTION recurseShipNumber(maxLength)
+		IF number > 1
+			RETURN number + recurseShipNumber(number - 1)
+		END IF
+		RETURN 0
+	END FUNCTION
+
+	FUNCTION constructGrid(gridId)
+		FOR outer = 0 T0 9
+			DECLARE OBJECT row = <create row number outer>
+			FOR inner = 0 TO 9
+				<append col inner to row outer>
+			END FOR
+		END FOR
+	END FUNCTION
+
+	FUNCTION createAndPopulateGrid(player)
+		player.grid = NEW ARRAY[9]
+		player.opponentGrid = NEW ARRAY[9]
+
+		FOR outer = 0 TO 9
+			player.grid[outer] = NEW ARRAY[9]
+			player.opponentGrid[outer] = NEW ARRAY[9]
+			FOR inner = 0 TO 9
+				player.grid[outer][inner] = 0
+				player.opponentGrid[outer][inner] = 0
+			END FOR
+		END FOR
+	END FUNCTION
+
+	FUNCTION renderPlaced()
+		<remove all rendered ships>
+
+		FOR outer = 0 TO 9
+			FOR inner = 0 TO 9
+				IF Player.grid = <SHIP>
+					<render ship on grid>
+				END IF
+			END FOR
+		END FOR
+	END FUNCTION
+
+	FUNCTION mockShip(x, y)
+		renderPlaced()
+
+		FOR length = ShipsToPlace TO 0
+			DECLARE INTEGER xmod = 0
+			DECLARE INTEGER ymod = 0
+			DECLARE INTEGER tempx
+			DECLARE INTEGER tempy
+
+			IF PlaceDirection == <horizontal>
+				xmod = length
+			END IF
+
+			IF PlaceDirection == <vertical>
+				ymod = length
+			END IF
+
+			IF y + ymod <= 9
+				tempy = y + ymod
+			ELSE
+				tempy = y - ((y + ymod) - 9)
+			END IF
+
+			IF x + xmod <= 9
+				tempx = x + xmod
+			ELSE
+				tempx = x - ((x + xmod) - 9)
+			END IF
+
+			IF Player.grid[tempx][tempy] == <empty>
+				<display ship at coord>
+			ELSE
+				<display ship cannot be placed at coord (red)>
+			END IF
+
+		END FOR
+	END FUNCTION
+
+	FUNCTION canPlace(x, y, len, placedirection, grid)
+		FOR counter = len TO 0
+			DECLARE INTEGER xmod = 0
+			DECLARE INTEGER ymod = 0
+			DECLARE INTEGER tempx
+			DECLARE INTEGER tempy
+
+			IF PlaceDirection == <horizontal>
+				xmod = length
+			END IF
+
+			IF PlaceDirection == <vertical>
+				ymod = length
+			END IF
+
+			IF y + ymod <= 9
+				tempy = y + ymod
+			ELSE
+				tempy = y - ((y + ymod) - 9)
+			END IF
+
+			IF x + xmod <= 9
+				tempx = x + xmod
+			ELSE
+				tempx = x - ((x + xmod) - 9)
+			END IF
+
+			IF grid[tempx][tempy] == <ship>
+				RETURN FALSE
+			END IF
+
+			RETURN TRUE
+		END FOR
+	END FUNCTION
+
+	FUNCTION placeShip(x, y)
+		IF ShipsToPlace == 0
+			RETURN
+		END IF
+
+		IF NOT canPlace(x, y, ShipsToPlace, PlaceDirection, Player.grid)
+
+		FOR counter = len TO 0
+			DECLARE INTEGER xmod = 0
+			DECLARE INTEGER ymod = 0
+			DECLARE INTEGER tempx
+			DECLARE INTEGER tempy
+
+			IF PlaceDirection == <horizontal>
+				xmod = length
+			END IF
+
+			IF PlaceDirection == <vertical>
+				ymod = length
+			END IF
+
+			IF y + ymod <= 9
+				tempy = y + ymod
+			ELSE
+				tempy = y - ((y + ymod) - 9)
+			END IF
+
+			IF x + xmod <= 9
+				tempx = x + xmod
+			ELSE
+				tempx = x - ((x + xmod) - 9)
+			END IF
+
+			<display ship at coordinate tempx, tempy>
+
+			Player.grid[tempx][tempy] = <ship>
+
+			RETURN TRUE
+		END FOR
+
+		IF ShipsToPlace == 1
+			placeComputerShips()
+			GameState = <player's turn>
+			<change from place display to play display>
+		END IF
+
+		ShipsToPlace = ShipsToPlace - 1
+	END FUNCTION
+
+	FUNCTION playerMove(x, y)
+		IF NOT GameState == <player's turn>
+			RETURN
+		END IF
+
+		DECLARE INTEGER targetTile = Player.opponentGrid[x][y]
+		DECALRE OBJECT targetCell  = <square on grid>
+
+		IF <tile has not been played in>
+			DECLARE INTEGER opponentTile = Challenger.grid[x][y]
+
+			IF opponentTile == <ship>
+				Challenger.grid[x][y] = <hit>
+				Player.grid[x][y] = <hit>
+
+				<display hit on targetCell>
+
+				Player.shipsToHit = Player.shipsToHit - 1
+			ELSE
+				player.opponentGrid = <miss>
+
+				<display miss on targetCell>
+			END IF
+		ELSE
+			RETURN
+		END IF
+
+		IF Player.shipsToHit == 0
+			<display win animation and message>
+		END IF
+
+		IF GameMode = <against computer>
+			<change the turn indicator>
+			<set opponent turn>
+			computerMove()
+		ELSE
+			<it would be set to other player's turn>
+		END IF
+
+
+	END FUNCTION
+
+	FUNCTION placeComputerShips()
+		<random delay according to config>
+
+		DECLARE INTEGER x
+		DECLARE INTEGER y
+		DECLARE INTEGER direction
+
+		FOR counter = 5 TO 2
+			DECLARE BOOLEAN found = FALSE
+
+			WHILE NOT found
+				DECLARE INTEGER x = <random number from 1 to 10>
+				DECLARE INTEGER y = <random number from 1 to 10>
+
+				IF <random boolean>
+					direction = <vertical>
+				ELSE
+					direction = <horizontal>
+				END IF
+			END WHILE
+
+			FROM placeCounter = 0 TO counter
+				DECLARE INTEGER xmod = 0
+				DECLARE INTEGER ymod = 0
+				DECLARE INTEGER tempx
+				DECLARE INTEGER tempy
+
+				IF PlaceDirection == <horizontal>
+					xmod = length
+				END IF
+
+				IF PlaceDirection == <vertical>
+					ymod = length
+				END IF
+
+				IF y + ymod <= 9
+					tempy = y + ymod
+				ELSE
+					tempy = y - ((y + ymod) - 9)
+				END IF
+
+				IF x + xmod <= 9
+					tempx = x + xmod
+				ELSE
+					tempx = x - ((x + xmod) - 9)
+				END IF
+
+				Challenger.grid[tempx][tempy] = <ship>
+			END FOR
+		END FOR
+	END FUNCTION
+
+	FUNCTION computerMove()
+		IF <no search is selected>
+			Challenger.search = NEW RandomSearch(Player, Challenger)
+		END IF
+
+		DECLARE OBJECT tile = Challenger.search.findNext()
+
+		IF <tile does not exist because a search has finished>
+			Challenger.search = NEW RandomSearch(Player, Challenger)
+			computerMove()
+		END IF
+	END FUNCTION
+
+	DECLARE OBJECT targetCell = <square from the grid>
+
+	SWITCH tile.TileState
+		CASE <ship>
+			Player.grid[tile.X][tile.Y] = <hit>
+			Challenger.opponentGrid[tile.X][tile.Y] = <hit>
+
+			IF Challenger.search == <randomsearch> AND Config.difficulty == <normal>
+				Challenger.search = NEW RadialSearch(Player, Challenger, tile.X, tile.Y)
+			END IF
+
+			Challenger.shipsToHit = Challenger.shipsToHit - 1
+
+			<display hit>
+			BREAK
+		CASE <empty>
+			Player.grid[tile.X][tile.Y] = <miss>
+			Challenger.opponentGrid[tile.X][tile.Y] = <miss>
+
+			<display miss>
+			BREAK
+	END SWITCH
+
+	IF Challenger.shipsToHit == 0
+		<lose animation>
+
+		RETURN
+	END IF
+
+	GameState = <player's turn>
+
+	<change turn indicator>
+END CLASS

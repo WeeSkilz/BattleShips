@@ -1,0 +1,63 @@
+CLASS RadialSearch
+	DECLARE OBJECT Player
+	DECLARE OBJECT Challenger
+	DECLARE INTEGER X
+	DECLARE INTEGER Y
+	DECLARE INTEGER Stage = 0
+
+	CONSTRUCTOR player, challenger, x, y
+		Player = player
+		Challenger = challenger
+		X = x
+		Y = y
+	END CONSTRUCTOR
+
+	FUNCTION findNext()
+		DECLARE BOOLEAN found = FALSE
+		DECLARE OBJECT tile
+
+		WHILE NOT found
+			Stage = Stage + 1
+
+			SWITCH Stage
+				CASE 1
+					IF <tile is on the top edge or has been played in>
+						BREAK
+					END IF
+
+					tile = new Tile(x, y-1, Player.grid[x][y-1])
+					found = TRUE
+
+					BREAK
+				CASE 2
+					IF <tile is on the right edge or has been played in>
+						BREAK
+					END IF
+
+					tile = new Tile(x+1, y, Player.grid[x+1][y])
+					found = TRUE
+
+					BREAK
+				CASE 3
+					IF <tile is on the bottom edge or has been played in>
+						BREAK
+					END IF
+
+					tile = new Tile(x, y+1, Player.grid[x][y+1])
+					found = TRUE
+
+					BREAK
+				CASE 4
+					IF <tile is on the left edge or has been played in>
+						BREAK
+					END IF
+
+					tile = new Tile(x-1, y, Player.grid[x-1][y])
+					found = TRUE
+
+					BREAK
+		END WHILE
+
+		RETURN tile
+	END FUNCTION
+END CLASS
